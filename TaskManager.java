@@ -129,11 +129,6 @@ public class TaskManager extends JFrame {
             displayTasks();
 
             saveTasks(); // タスクを保存する
-
-            // 入力欄クリア
-            titleField.setText("");
-            descriptionField.setText("");
-            dueDateField.setText("");
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "期限日の日付形式が正しくありません（例: 2025-05-15）。", "日付エラー",
                     JOptionPane.ERROR_MESSAGE);
@@ -185,12 +180,6 @@ public class TaskManager extends JFrame {
 
             displayTasks();
             saveTasks();
-
-            // 入力欄クリア
-            titleField.setText("");
-            descriptionField.setText("");
-            dueDateField.setText("");
-
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "期限日の日付形式が正しくありません（例: 2025-05-15）。", "日付エラー",
                     JOptionPane.ERROR_MESSAGE);
@@ -216,42 +205,42 @@ public class TaskManager extends JFrame {
     }
 
     private void importTasks() {
-    JFileChooser fileChooser = new JFileChooser();
-    fileChooser.setDialogTitle("CSVファイルを選択してください");
-    int result = fileChooser.showOpenDialog(this);
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("CSVファイルを選択してください");
+        int result = fileChooser.showOpenDialog(this);
 
-    if (result == JFileChooser.APPROVE_OPTION) {
-        File selectedFile = fileChooser.getSelectedFile();
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(selectedFile))) {
-            String line;
-            boolean isFirstLine = true; // 最初の行を判定するフラグ
+            try (BufferedReader reader = new BufferedReader(new FileReader(selectedFile))) {
+                String line;
+                boolean isFirstLine = true; // 最初の行を判定するフラグ
 
-            while ((line = reader.readLine()) != null) {
-                if (isFirstLine) {
-                    isFirstLine = false; // 最初の行（カラム行）はスキップ
-                    continue;
+                while ((line = reader.readLine()) != null) {
+                    if (isFirstLine) {
+                        isFirstLine = false; // 最初の行（カラム行）はスキップ
+                        continue;
+                    }
+                    try {
+                        Task task = Task.fromCSV(line);
+                        taskList.add(task);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(this, "タスクの登録中にエラーが発生しました: " + ex.getMessage(),
+                                "登録エラー", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
-                try {
-                    Task task = Task.fromCSV(line);
-                    taskList.add(task);
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this, "タスクの登録中にエラーが発生しました: " + ex.getMessage(),
-                            "登録エラー", JOptionPane.ERROR_MESSAGE);
-                }
+
+                sortTasksByDueDate(); // 読み込み後にソート
+                saveTasks(); // 保存
+                displayTasks(); // 画面更新
+
+                JOptionPane.showMessageDialog(this, "タスクを一括登録しました。", "登録完了", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "ファイルの読み込み中にエラーが発生しました: " + e.getMessage(),
+                        "読み込みエラー", JOptionPane.ERROR_MESSAGE);
             }
-
-            sortTasksByDueDate(); // 読み込み後にソート
-            saveTasks(); // 保存
-            displayTasks(); // 画面更新
-
-            JOptionPane.showMessageDialog(this, "タスクを一括登録しました。", "登録完了", JOptionPane.INFORMATION_MESSAGE);
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "ファイルの読み込み中にエラーが発生しました: " + e.getMessage(),
-                    "読み込みエラー", JOptionPane.ERROR_MESSAGE);
         }
     }
-}
 
     private void displayTasks() {
         tableModel.setRowCount(0);
@@ -285,12 +274,16 @@ public class TaskManager extends JFrame {
             writer.write("タイトル,内容,完了,期限日,登録日,更新日,優先度,期限切れ");
             writer.newLine();
 
-            sortTasksByDueDate();
-            displayTasks();
             for (Task task : taskList) {
                 writer.write(task.toCSV());
                 writer.newLine();
             }
+            sortTasksByDueDate();
+            displayTasks();
+            // 入力欄クリア
+            titleField.setText("");
+            descriptionField.setText("");
+            dueDateField.setText("");
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "タスクの保存中にエラーが発生しました。", "保存エラー", JOptionPane.ERROR_MESSAGE);
         }
