@@ -286,6 +286,7 @@ public class TaskManager extends JFrame {
             writer.newLine();
 
             sortTasksByDueDate();
+            displayTasks();
             for (Task task : taskList) {
                 writer.write(task.toCSV());
                 writer.newLine();
